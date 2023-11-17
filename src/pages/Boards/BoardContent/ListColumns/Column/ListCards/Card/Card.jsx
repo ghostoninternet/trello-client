@@ -20,7 +20,8 @@ function Card({ card }) {
     // touchAction: 'none', // For PointerSensor default sensor
     transform: CSS.Translate.toString(transform), // If we use Transition, we will get stretch error
     transition,
-    opacity: isDragging ? '0.5' : undefined
+    opacity: isDragging ? '0.5' : undefined,
+    border: isDragging ? '1px solid #2ecc71' : undefined
   }
 
   const shouldShowCardAction = () => {

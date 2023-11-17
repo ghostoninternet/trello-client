@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
+import { cloneDeep } from 'lodash'
 import Box from '@mui/material/Box'
 import {
   DndContext,
@@ -9,7 +9,8 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-  defaultDropAnimationSideEffects
+  defaultDropAnimationSideEffects,
+  closestCorners
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import ListColumns from './ListColumns/ListColumns'
@@ -47,15 +48,88 @@ function BoardContent({ board }) {
     setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, '_id'))
   }, [board])
 
+  const findColumnByCardId = (cardId) => {
+    return orderedColumns.find(column => column?.cards?.map(card => card._id)?.includes(cardId))
+  }
+
   const handleDragStart = (event) => {
     setActiveDragItemId(event?.active?.id)
     setActiveDragItemType(event?.active?.data?.current?.columnId ? ACTIVE_DRAG_ITEM_TYPE.CARD : ACTIVE_DRAG_ITEM_TYPE.COLUMN)
     setActiveDragItemData(event?.active?.data?.current)
   }
 
-  const handleDragEnd = (event) => {
+  // Trigger when we are dragging a column or a card
+  const handleDragOver = (event) => {
+    // End the function if column is being dragged
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) return
+
+    // Do something if card is being dragged
+    // console.log('handleDragOver: ', event)
     const { active, over } = event
-    if (!over) return // If someone try to drag and drop at no where.
+    // Make sure that both active and over are existing, to ensure that if someone is dragging column or card outside
+    // the container then we won't do anything (to prevent the web page get crashed)
+    if (!active || !over) return
+
+    // activeDraggingCardId: The card that is being dragged
+    const { id: activeDraggingCardId, data: { current: activeDraggingCardData } } = active
+    // overCardId: The card that is interacting with the activeDraggingCardId
+    const { id: overCardId } = over
+
+    // Find 2 columns by cardId
+    const activeColumn = findColumnByCardId(activeDraggingCardId)
+    const overColumn = findColumnByCardId(overCardId)
+
+    if (!activeColumn || !overColumn) return
+
+    // Processing logic here only when we dragging over 2 different columns
+    if (activeColumn._id !== overColumn._id) {
+      setOrderedColumns(prevColumns => {
+        // Find index position of overCard in overColumn
+        const overCardIndex = overColumn?.cards?.findIndex(card => card._id === overCardId)
+
+        // Logic to calculate new index of activeCard when drag to overColumn (code is taken from dnd-kit library)
+        let newCardIndex
+        const isBelowOverItem = active.rect.current.translated &&
+                active.rect.current.translated.top > over.rect.top + over.rect.height
+
+        const modifier = isBelowOverItem ? 1 : 0
+
+        newCardIndex = overCardIndex >= 0 ? overCardIndex + modifier : overColumn?.cards?.length + 1
+
+        const nextColumns = cloneDeep(prevColumns)
+        const nextActiveColumn = nextColumns.find(column => column._id === activeColumn._id)
+        const nextOverColumn = nextColumns.find(column => column._id === overColumn._id)
+
+        if (nextActiveColumn) {
+          // Delete the activeCard
+          nextActiveColumn.cards = nextActiveColumn.cards.filter(card => card._id !== activeDraggingCardId)
+          // Update cardOrderIds
+          nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(card => card._id)
+        }
+
+        if (nextOverColumn) {
+          // Check if activeCard is existing in OverColumn, if yes then delete it first
+          nextOverColumn.cards = nextOverColumn.cards.filter(card => card._id !== activeDraggingCardId)
+          // Add activeCard to OverColumn according to newCardIndex position
+          nextOverColumn.cards = nextOverColumn.cards.toSpliced(newCardIndex, 0, activeDraggingCardData)
+          // Update cardOrderIds
+          nextOverColumn.cardOrderIds = nextOverColumn.cards.map(card => card._id)
+        }
+        return nextColumns
+      })
+    }
+  }
+
+  const handleDragEnd = (event) => {
+
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) {
+      return
+    }
+
+    const { active, over } = event
+    // Make sure that both active and over are existing, to ensure that if someone is dragging column or card outside
+    // the container then we won't do anything (to prevent the web page get crashed)
+    if (!active || !over) return
 
     // If the position change
     if (active.id !== over.id) {
@@ -79,7 +153,11 @@ function BoardContent({ board }) {
   return (
     <DndContext
       sensors={sensors}
+      // collision detection algorithm: to fix bug can't drag card with large cover through difference columns
+      // and in the same column (the reason of bug is because of the conflict between card and column)
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <Box sx={{
