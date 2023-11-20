@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { cloneDeep } from 'lodash'
 import Box from '@mui/material/Box'
 import {
@@ -10,7 +10,9 @@ import {
   useSensor,
   useSensors,
   defaultDropAnimationSideEffects,
-  closestCorners
+  closestCorners,
+  pointerWithin,
+  getFirstCollision
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import ListColumns from './ListColumns/ListColumns'
@@ -31,6 +33,9 @@ function BoardContent({ board }) {
   const [activeDragItemType, setActiveDragItemType] = useState(null)
   const [activeDragItemData, setActiveDragItemData] = useState(null)
   const [oldColumnWhenDraggingCard, setOldColumnWhenDraggingCard] = useState(null)
+
+  // The last previous intersection point
+  const lastOverId = useRef(null)
 
   // If we use pointerSensor then we have to use CSS property touch-action: none at draggable components, but there are still bugs
   // const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 10 } })
@@ -217,12 +222,57 @@ function BoardContent({ board }) {
     sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } })
   }
 
+  const collisionDetectionStrategy = useCallback((args) => {
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
+      return closestCorners({ ...args })
+    }
+
+    // Find all intersection, collision point with pointer and return an array of collision
+    const pointerIntersection = pointerWithin(args)
+
+    // If pointerIntersection is empty array, do nothing and return
+    // Fix flickering bug: Drag a card with large cover and pull on top outside of drag and drop zone
+    if (!pointerIntersection?.length) return
+
+    // Collision detection algorithm will return an array of collision here
+    // const intersections = !!pointerIntersection?.length ? pointerIntersection : rectIntersection(args)
+
+    // Find first overId in intersection
+    let overId = getFirstCollision(pointerIntersection, 'id')
+
+    if (overId) {
+      // Fix flickering
+      // If overId is column then find the nearest cardId inside the collision area based on
+      // closestCenter or closestCorners. But closestCorners bring smoothier experience
+      // If we don't have checkColumn, there still won't be any flickering bugs but drag and drop experience will be very bad
+      const checkColumn = orderedColumns.find(column => column._id === overId)
+      if (checkColumn) {
+        overId = closestCorners({
+          ...args,
+          droppableContainers: args.droppableContainers.filter(container => {
+            return (container.id !== overId) && (checkColumn?.cardOrderIds?.includes(container.id))
+          })
+        })[0]?.id
+      }
+      lastOverId.current = overId
+      return [{ id: overId }]
+    }
+
+    // If overId is null then return empty array, avoid crash webpage
+    return lastOverId.current ? [{ id: lastOverId.current }] : []
+  }, [activeDragItemType, orderedColumns])
+
   return (
     <DndContext
       sensors={sensors}
       // collision detection algorithm: to fix bug can't drag card with large cover through difference columns
       // and in the same column (the reason of bug is because of the conflict between card and column)
-      collisionDetection={closestCorners}
+
+      // Using only closestCorners will cause flickering + false data bug
+      // collisionDetection={closestCorners}
+
+      // Custome collision detection algorithms
+      collisionDetection={collisionDetectionStrategy}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
