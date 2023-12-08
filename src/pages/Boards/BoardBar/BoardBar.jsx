@@ -49,7 +49,7 @@ function BoardBar({ board }) {
         />
         <Chip
           icon={<VpnLockIcon />}
-          label={capitalizeFirstLetter(board.type)}
+          label={capitalizeFirstLetter(board?.type)}
           clickable
           sx={MENU_STYLES}
         />
