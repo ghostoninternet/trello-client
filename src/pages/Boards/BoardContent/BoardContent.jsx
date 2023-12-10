@@ -5,8 +5,8 @@ import {
   DndContext,
   // PointerSensor,
   DragOverlay,
-  MouseSensor,
-  TouchSensor,
+  // MouseSensor,
+  // TouchSensor,
   useSensor,
   useSensors,
   defaultDropAnimationSideEffects,
@@ -14,6 +14,7 @@ import {
   pointerWithin,
   getFirstCollision
 } from '@dnd-kit/core'
+import { MouseSensor, TouchSensor } from '~/customLibs/DndKitSensors'
 import { arrayMove } from '@dnd-kit/sortable'
 import ListColumns from './ListColumns/ListColumns'
 import Column from './ListColumns/Column/Column'
