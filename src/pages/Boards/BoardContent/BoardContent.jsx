@@ -27,7 +27,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard }) {
+function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
   const [orderedColumns, setOrderedColumns] = useState([])
 
   // At one moment, either card or column can be dragged
@@ -121,6 +121,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
     })
   }
 
+  // Trigger when we are dragging a column or a card
   const handleDragStart = (event) => {
     setActiveDragItemId(event?.active?.id)
     setActiveDragItemType(event?.active?.data?.current?.columnId ? ACTIVE_DRAG_ITEM_TYPE.CARD : ACTIVE_DRAG_ITEM_TYPE.COLUMN)
@@ -167,6 +168,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
     }
   }
 
+  // Trigger when we finish dragging a column or a card
   const handleDragEnd = (event) => {
     const { active, over } = event
     // Make sure that both active and over are existing, to ensure that if someone is dragging column or card outside
@@ -218,8 +220,9 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         const newColumnIndex = orderedColumns.findIndex(c => c._id === over.id) // New position of active
 
         const dndOrderedColumns = arrayMove(orderedColumns, oldColumnIndex, newColumnIndex)
-        // const dndOrderedColumnsIds = dndOrderedColumns.map(c => c._id) // For API
+        moveColumns(dndOrderedColumns)
 
+        // Still update state here to avoid UI delay or flickering when calling API when finish dragging card
         setOrderedColumns(dndOrderedColumns)
       }
     }
