@@ -19,7 +19,6 @@ import { arrayMove } from '@dnd-kit/sortable'
 import ListColumns from './ListColumns/ListColumns'
 import Column from './ListColumns/Column/Column'
 import Card from './ListColumns/Column/ListCards/Card/Card'
-import { mapOrder } from '~/utils/sorts'
 import { generatePlaceholderCard } from '~/utils/formatter'
 
 const ACTIVE_DRAG_ITEM_TYPE = {
@@ -27,7 +26,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
+function BoardContent({ board, createNewColumn, createNewCard, moveColumns, moveCardInTheSameColumn }) {
   const [orderedColumns, setOrderedColumns] = useState([])
 
   // At one moment, either card or column can be dragged
@@ -53,7 +52,7 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
   const sensors = useSensors(mouseSensor, touchSensor)
 
   useEffect(() => {
-    setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, '_id'))
+    setOrderedColumns(board.column)
   }, [board])
 
   const findColumnByCardId = (cardId) => {
@@ -197,19 +196,24 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
         )
       } else {
         // Drag and drop in the same column
-        const oldCardIndex = oldColumnWhenDraggingCard?.cards?.findIndex(c => c._id === activeDragItemId) // Old position of active
-        const newCardIndex = overColumn?.cards?.findIndex(c => c._id === overCardId) // New position of active
+
+        // Old position of active (from oldColumnWhenDraggingCard)
+        const oldCardIndex = oldColumnWhenDraggingCard?.cards?.findIndex(c => c._id === activeDragItemId)
+        // New position of active (from overColumn)
+        const newCardIndex = overColumn?.cards?.findIndex(c => c._id === overCardId)
         const dndOrderedCards = arrayMove(oldColumnWhenDraggingCard?.cards, oldCardIndex, newCardIndex)
+        const dndOrderedCardIds = dndOrderedCards.map(card => card._id)
 
         setOrderedColumns(prevColumns => {
           const nextColumns = cloneDeep(prevColumns)
 
           const targetColumns = nextColumns.find(column => column._id === overColumn._id)
           targetColumns.cards = dndOrderedCards
-          targetColumns.cardOrderIds = dndOrderedCards.map(card => card._id)
+          targetColumns.cardOrderIds = dndOrderedCardIds
 
           return nextColumns
         })
+        moveCardInTheSameColumn(dndOrderedCards, dndOrderedCardIds, oldColumnWhenDraggingCard._id)
       }
     }
 
@@ -220,10 +224,12 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns }) {
         const newColumnIndex = orderedColumns.findIndex(c => c._id === over.id) // New position of active
 
         const dndOrderedColumns = arrayMove(orderedColumns, oldColumnIndex, newColumnIndex)
-        moveColumns(dndOrderedColumns)
 
         // Still update state here to avoid UI delay or flickering when calling API when finish dragging card
         setOrderedColumns(dndOrderedColumns)
+
+        moveColumns(dndOrderedColumns)
+
       }
     }
 
