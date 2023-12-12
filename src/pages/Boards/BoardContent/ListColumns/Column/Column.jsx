@@ -24,7 +24,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { mapOrder } from '~/utils/sorts'
 
-function Column({ column }) {
+function Column({ column, createNewCard }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: column._id,
     data: { ...column }
@@ -56,11 +56,18 @@ function Column({ column }) {
   const [openNewCardForm, setOpenNewCardForm] = useState(false)
   const toggleOpenNewCardForm = () => setOpenNewCardForm(!openNewCardForm)
   const [newCardTitle, setNewCardTitle] = useState('')
-  const addNewCard = () => {
+  const addNewCard = async () => {
     if (!newCardTitle) {
       toast.error('Please enter card title', { position: 'bottom-right' })
       return
     }
+    // Create card data
+    const newCardData = {
+      title: newCardTitle,
+      columnId: column._id
+    }
+    await createNewCard(newCardData)
+
     setNewCardTitle('')
     toggleOpenNewCardForm()
   }
