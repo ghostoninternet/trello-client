@@ -6,13 +6,15 @@ import CircularProgress from '@mui/material/CircularProgress'
 import AppBar from '~/components/AppBar/AppBar'
 import BoardBar from './BoardBar/BoardBar'
 import BoardContent from './BoardContent/BoardContent'
+import { toast } from 'react-toastify'
 import {
   fetchBoardDetailsAPI,
   createColumnDetailsAPI,
   createCardDetailsAPI,
   updateBoardDetailsAPI,
   updateColumnDetailsAPI,
-  moveCardToDifferenceColumnAPI
+  moveCardToDifferenceColumnAPI,
+  deleteColumnDetailsAPI
 } from '~/apis'
 import { generatePlaceholderCard } from '~/utils/formatter'
 import { mapOrder } from '~/utils/sorts'
@@ -100,6 +102,7 @@ function Board() {
     updateColumnDetailsAPI(columnId, { cardOrderIds: dndOrderedCardIds })
   }
 
+  // Call API when dragging card between difference column
   const moveCardToDifferenceColumn = (currentCardId, prevColumnId, nextColumnId, dndOrderedColumns) => {
     const dndOrderedColumnsIds = dndOrderedColumns.map(c => c._id)
     const newBoard = { ...board }
@@ -122,6 +125,20 @@ function Board() {
       nextColumnId,
       nextCardOrderIds: dndOrderedColumns.find(c => c._id === nextColumnId)?.cardOrderIds
     })
+  }
+
+  // Delete a column and all its cards
+  const deleteColumnDetails = (columnId) => {
+    // Update state board
+    const newBoard = { ...board }
+    newBoard.columns = newBoard.columns.filter(c => c._id !== columnId)
+    newBoard.columnOrderIds = newBoard.columnOrderIds.filter(_id => _id !== columnId)
+    setBoard(newBoard)
+    // Call API
+    deleteColumnDetailsAPI(columnId)
+      .then(response => {
+        toast.success(response?.deleteResult)
+      })
   }
   if (!board) {
     return (
@@ -148,6 +165,7 @@ function Board() {
         moveColumns={moveColumns}
         moveCardInTheSameColumn={moveCardInTheSameColumn}
         moveCardToDifferenceColumn={moveCardToDifferenceColumn}
+        deleteColumnDetails={deleteColumnDetails}
       />
     </Container>
   )
