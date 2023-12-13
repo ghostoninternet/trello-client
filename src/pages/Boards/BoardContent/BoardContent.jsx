@@ -32,7 +32,8 @@ function BoardContent({
   createNewCard,
   moveColumns,
   moveCardInTheSameColumn,
-  moveCardToDifferenceColumn
+  moveCardToDifferenceColumn,
+  deleteColumnDetails
 }) {
   const [orderedColumns, setOrderedColumns] = useState([])
 
@@ -326,6 +327,7 @@ function BoardContent({
           columns={orderedColumns}
           createNewColumn={createNewColumn}
           createNewCard={createNewCard}
+          deleteColumnDetails={deleteColumnDetails}
         />
         <DragOverlay dropAnimation={customDropAnimation}>
           {!activeDragItemType && null}
