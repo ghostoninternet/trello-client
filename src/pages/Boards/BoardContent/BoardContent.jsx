@@ -26,7 +26,14 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard, moveColumns, moveCardInTheSameColumn }) {
+function BoardContent({
+  board,
+  createNewColumn,
+  createNewCard,
+  moveColumns,
+  moveCardInTheSameColumn,
+  moveCardToDifferenceColumn
+}) {
   const [orderedColumns, setOrderedColumns] = useState([])
 
   // At one moment, either card or column can be dragged
@@ -66,7 +73,8 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns, move
     over,
     activeColumn,
     activeDraggingCardId,
-    activeDraggingCardData
+    activeDraggingCardData,
+    triggerFrom
   ) => {
     setOrderedColumns(prevColumns => {
       // Find index position of overCard in overColumn
@@ -116,6 +124,11 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns, move
         // Update cardOrderIds
         nextOverColumn.cardOrderIds = nextOverColumn.cards.map(card => card._id)
       }
+
+      if (triggerFrom === 'handleDragEnd') {
+        //Call API
+        moveCardToDifferenceColumn(activeDraggingCardId, oldColumnWhenDraggingCard._id, nextOverColumn._id, nextColumns)
+      }
       return nextColumns
     })
   }
@@ -162,7 +175,8 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns, move
         over,
         activeColumn,
         activeDraggingCardId,
-        activeDraggingCardData
+        activeDraggingCardData,
+        'handleDragOver'
       )
     }
   }
@@ -184,6 +198,9 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns, move
       const activeColumn = findColumnByCardId(activeDraggingCardId)
       const overColumn = findColumnByCardId(overCardId)
 
+      // Dragging between 2 difference columns.
+      // Must use activeDraggingCardData.columnId or oldColumnWhenDraggingCard._id (set state from handleDragStart)
+      // not activeData in handleDragEnd scope because after went through onDragOver, the state has been updated once
       if (oldColumnWhenDraggingCard._id !== overColumn._id) {
         moveCardBetweenDifferentColumns(
           overColumn,
@@ -192,7 +209,8 @@ function BoardContent({ board, createNewColumn, createNewCard, moveColumns, move
           over,
           activeColumn,
           activeDraggingCardId,
-          activeDraggingCardData
+          activeDraggingCardData,
+          'handleDragEnd'
         )
       } else {
         // Drag and drop in the same column
