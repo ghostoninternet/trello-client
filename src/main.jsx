@@ -8,11 +8,9 @@ import 'react-toastify/dist/ReactToastify.css'
 import theme from './theme.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <CssVarsProvider theme={theme}>
-      <CssBaseline />
-      <App />
-      <ToastContainer theme='colored'/>
-    </CssVarsProvider>
-  </React.StrictMode>
+  <CssVarsProvider theme={theme}>
+    <CssBaseline />
+    <App />
+    <ToastContainer theme='colored'/>
+  </CssVarsProvider>
 )
