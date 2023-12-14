@@ -60,7 +60,7 @@ function BoardContent({
   const sensors = useSensors(mouseSensor, touchSensor)
 
   useEffect(() => {
-    setOrderedColumns(board.column)
+    setOrderedColumns(board.columns)
   }, [board])
 
   const findColumnByCardId = (cardId) => {

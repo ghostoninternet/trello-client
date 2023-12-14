@@ -25,7 +25,8 @@ function Board() {
   useEffect(() => {
     const boardId = '6578330f2d63f56c573d88e6'
     fetchBoardDetailsAPI(boardId).then(board => {
-      board.column = mapOrder(board.columns, board.columnOrderIds, '_id')
+      console.log('🚀 ~ file: _id.jsx:28 ~ fetchBoardDetailsAPI ~ board:', board)
+      board.columns = mapOrder(board.columns, board.columnOrderIds, '_id')
       board.columns.forEach(column => {
         if (isEmpty(column.cards)) {
           column.cards = [generatePlaceholderCard(column)]
