@@ -1,5 +1,5 @@
 {
-  "name": "trello-web",
+  "name": "trello-client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
