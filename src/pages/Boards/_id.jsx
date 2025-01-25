@@ -17,7 +17,7 @@ import {
   deleteColumnDetailsAPI
 } from '~/apis'
 import { generatePlaceholderCard } from '~/utils/formatter'
-import { mapOrder } from '~/utils/sorts'
+import { mapOrder } from '~/utils/sorts' 
 
 function Board() {
   const [board, setBoard] = useState(null)
