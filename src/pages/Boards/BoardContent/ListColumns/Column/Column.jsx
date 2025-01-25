@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import Menu from '@mui/material/Menu'
@@ -23,13 +24,18 @@ import CloseIcon from '@mui/icons-material/Close'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useConfirm } from 'material-ui-confirm'
+import { createCardDetailsAPI, deleteColumnDetailsAPI } from '~/apis'
+import {
+  updateCurrentActiveBoard,
+  selectCurrentActiveBoard
+} from '~/redux/activeBoard/activeBoardSlice.js'
+import { cloneDeep } from 'lodash'
 
-function Column({ column, createNewCard, deleteColumnDetails }) {
+function Column({ column }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: column._id,
     data: { ...column }
   })
-
   const dndKitColumnStyles = {
     // touchAction: 'none', // For PointerSensor default sensor
     // If we use Transition, we will get stretch error
@@ -51,12 +57,15 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
     setAnchorEl(null)
   }
 
+  const dispatch = useDispatch()
+  const board = useSelector(selectCurrentActiveBoard)
   const orderedCards = column.cards
 
   const [openNewCardForm, setOpenNewCardForm] = useState(false)
   const toggleOpenNewCardForm = () => setOpenNewCardForm(!openNewCardForm)
   const [newCardTitle, setNewCardTitle] = useState('')
-  const addNewCard = () => {
+
+  const addNewCard = async () => {
     if (!newCardTitle) {
       toast.error('Please enter card title', { position: 'bottom-right' })
       return
@@ -66,7 +75,23 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
       title: newCardTitle,
       columnId: column._id
     }
-    createNewCard(newCardData)
+    const createdCard = await createCardDetailsAPI({
+      ...newCardData,
+      boardId: board._id
+    })
+    // Update board state
+    const newBoard = cloneDeep(board)
+    const columnToUpdate = newBoard.columns.find(column => column._id === createdCard.columnId)
+    if (columnToUpdate) {
+      if (columnToUpdate.cards.some(card => card.FE_PlaceholderCard)) {
+        columnToUpdate.cards = [createdCard]
+        columnToUpdate.cardOrderIds = [createdCard._id]
+      } else {
+        columnToUpdate.cards.push(createdCard)
+        columnToUpdate.cardOrderIds.push((createdCard._id))
+      }
+    }
+    dispatch(updateCurrentActiveBoard(newBoard))
 
     setNewCardTitle('')
     toggleOpenNewCardForm()
@@ -79,15 +104,19 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
       description: 'This action will permanently delete your column and all its cards. Enter the column title to confirm',
       confirmationKeyword: column.title,
       confirmationText: 'Confirm',
-      cancellationText: 'Cancel',
-
-      // allowClose: false,
-      // dialogProps: { maxWidth: 'xs' },
-      // confirmationButtonProps: { color: 'success', variant: 'outlined' },
-      // cancellationButtonProps: { color: 'inherit', variant: 'outlined' }
+      cancellationText: 'Cancel'
     })
       .then(() => {
-        deleteColumnDetails(column._id)
+        // Update state board
+        const newBoard = { ...board }
+        newBoard.columns = newBoard.columns.filter(c => c._id !== column._id)
+        newBoard.columnOrderIds = newBoard.columnOrderIds.filter(_id => _id !== column._id)
+        dispatch(updateCurrentActiveBoard(newBoard))
+        // Call API
+        deleteColumnDetailsAPI(column._id)
+          .then(response => {
+            toast.success(response?.deleteResult)
+          })
       })
       .catch(() => {})
   }

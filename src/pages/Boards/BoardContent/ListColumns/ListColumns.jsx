@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { cloneDeep } from 'lodash'
 import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
 import Box from '@mui/material/Box'
 import Column from './Column/Column'
 import Button from '@mui/material/Button'
@@ -7,12 +9,22 @@ import NoteAddIcon from '@mui/icons-material/NoteAdd'
 import TextField from '@mui/material/TextField'
 import CloseIcon from '@mui/icons-material/Close'
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable'
+import { createColumnDetailsAPI } from '~/apis'
+import { generatePlaceholderCard } from '~/utils/formatter'
+import {
+  updateCurrentActiveBoard,
+  selectCurrentActiveBoard
+} from '~/redux/activeBoard/activeBoardSlice.js'
 
-function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDetails }) {
+function ListColumns({ columns }) {
+  const dispatch = useDispatch()
+  const board = useSelector(selectCurrentActiveBoard)
+
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false)
   const toggleOpenNewColumnForm = () => setOpenNewColumnForm(!openNewColumnForm)
   const [newColumnTitle, setNewColumnTitle] = useState('')
-  const addNewColumn = () => {
+
+  const addNewColumn = async () => {
     if (!newColumnTitle) {
       toast.error('Please enter column title')
       return
@@ -22,7 +34,32 @@ function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDeta
     const newColumnData = {
       title: newColumnTitle
     }
-    createNewColumn(newColumnData)
+    const createdColumn = await createColumnDetailsAPI({
+      ...newColumnData,
+      boardId: board._id
+    })
+
+    // This code is for handling drag and drop case when we create a new column
+    // that column won't have any cards.
+    createdColumn.cards = [generatePlaceholderCard(createdColumn)]
+    createdColumn.cardOrderIds = [generatePlaceholderCard(createdColumn)._id]
+
+    // Update board state
+    // We will update state of board on Frontend instead of calling API again.
+    // We can also call API so Backend will return the new board after adding new column
+    // The choice is depend on project preference
+
+    // This code will get error: "Object is not extensible"
+    // because spread operator only do shallow copy not deep copy.
+    // That is why we will get the error and this error is from Immutability Rules of Redux
+    // which prevent us from changing the original object or array
+    // Ref: https://redux-toolkit.js.org/usage/immer-reducers
+    // const newBoard = { ...board }
+    const newBoard = cloneDeep(board)
+    newBoard.columns.push(createdColumn)
+    newBoard.columnOrderIds.push(createdColumn._id)
+    // setBoard(newBoard)
+    dispatch(updateCurrentActiveBoard(newBoard))
 
     // Clear input and close form
     setNewColumnTitle('')
@@ -48,8 +85,6 @@ function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDeta
           return <Column
             key={column._id}
             column={column}
-            createNewCard={createNewCard}
-            deleteColumnDetails={deleteColumnDetails}
           />
         })}
         {!openNewColumnForm
