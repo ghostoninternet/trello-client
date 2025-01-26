@@ -1,4 +1,3 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import CssBaseline from '@mui/material/CssBaseline'
@@ -11,21 +10,25 @@ import theme from './theme.js'
 // Config Redux Store
 import { store } from '~/redux/store'
 import { Provider } from 'react-redux'
+// Config React Router Dom with BrowserRouter
+import { BrowserRouter } from 'react-router-dom'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
-    <CssVarsProvider theme={theme}>
-      <ConfirmProvider defaultOptions={{
-        allowClose: false,
-        dialogProps: { maxWidth: 'md' },
-        confirmationButtonProps: { color: 'success', variant: 'outlined' },
-        cancellationButtonProps: { color: 'inherit', variant: 'outlined' },
-        buttonOrder: ['confirm', 'cancel']
-      }}>
-        <CssBaseline />
-        <App />
-        <ToastContainer theme='colored' />
-      </ConfirmProvider>
-    </CssVarsProvider>
-  </Provider>
+  <BrowserRouter basename='/'>
+    <Provider store={store}>
+      <CssVarsProvider theme={theme}>
+        <ConfirmProvider defaultOptions={{
+          allowClose: false,
+          dialogProps: { maxWidth: 'md' },
+          confirmationButtonProps: { color: 'success', variant: 'outlined' },
+          cancellationButtonProps: { color: 'inherit', variant: 'outlined' },
+          buttonOrder: ['confirm', 'cancel']
+        }}>
+          <CssBaseline />
+          <App />
+          <ToastContainer theme='colored' />
+        </ConfirmProvider>
+      </CssVarsProvider>
+    </Provider>
+  </BrowserRouter>
 )
