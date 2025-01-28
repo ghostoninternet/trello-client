@@ -1,10 +1,22 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import Board from '~/pages/Boards/_id'
 import NotFound from '~/pages/404/NotFound'
 import Auth from '~/pages/Auth/Auth'
 import AccountVerification from '~/pages/Auth/AccountVerification'
+import { selectCurrentUser } from '~/redux/user/userSlice'
+
+// Specify which route need user to be logined to be able to use
+// Using <Outlet /> for displaying child route
+// Ref: https://www.robinwieruch.de/react-router-private-routes/
+const ProtectedRoute = ({ user }) => {
+  if (!user) return <Navigate to={'/login'} replace={true} />
+  return <Outlet />
+}
 
 function App() {
+  const currentUser = useSelector(selectCurrentUser)
+
   return (
     <Routes>
       {/* Redirect route */}
@@ -16,8 +28,10 @@ function App() {
         // go back to URL='/' or not
         <Navigate to='/boards/6578330f2d63f56c573d88e6' replace={true} />
       } />
-      {/* Board Detail */}
-      <Route path='/boards/:boardId' element={<Board />} />
+      <Route element={<ProtectedRoute user={currentUser} />}>
+        {/* Board Detail */}
+        <Route path='/boards/:boardId' element={<Board />} />
+      </Route>
       {/* Authentication */}
       <Route path='/login' element={<Auth />} />
       <Route path='/register' element={<Auth />} />
