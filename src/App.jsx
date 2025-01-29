@@ -4,6 +4,7 @@ import Board from '~/pages/Boards/_id'
 import NotFound from '~/pages/404/NotFound'
 import Auth from '~/pages/Auth/Auth'
 import AccountVerification from '~/pages/Auth/AccountVerification'
+import Settings from '~/pages/Settings/Settings'
 import { selectCurrentUser } from '~/redux/user/userSlice'
 
 // Specify which route need user to be logined to be able to use
@@ -31,6 +32,10 @@ function App() {
       <Route element={<ProtectedRoute user={currentUser} />}>
         {/* Board Detail */}
         <Route path='/boards/:boardId' element={<Board />} />
+
+        {/* User Settings */}
+        <Route path='/settings/account' element={<Settings />} />
+        <Route path='/settings/security' element={<Settings />} />
       </Route>
       {/* Authentication */}
       <Route path='/login' element={<Auth />} />
