@@ -28,7 +28,7 @@ function App() {
         // To visual how this work, try to press Go Home button in 404 page
         // and then press Back button of browser to see if the browser will
         // go back to URL='/' or not
-        <Navigate to='/boards/6578330f2d63f56c573d88e6' replace={true} />
+        <Navigate to='/boards' replace={true} />
       } />
       <Route element={<ProtectedRoute user={currentUser} />}>
         {/* Board List */}
