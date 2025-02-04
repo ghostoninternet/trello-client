@@ -5,12 +5,11 @@ import VpnLockIcon from '@mui/icons-material/VpnLock'
 import AddToDriveIcon from '@mui/icons-material/AddToDrive'
 import BoltIcon from '@mui/icons-material/Bolt'
 import FilterListIcon from '@mui/icons-material/FilterList'
-import Avatar from '@mui/material/Avatar'
-import AvatarGroup from '@mui/material/AvatarGroup'
 import Tooltip from '@mui/material/Tooltip'
 import Button from '@mui/material/Button'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { capitalizeFirstLetter } from '~/utils/formatter'
+import BoardUserGroup from './BoardUserGroup'
 
 const MENU_STYLES = {
   color: 'white',
@@ -89,46 +88,7 @@ function BoardBar({ board }) {
         >
           Invite
         </Button>
-        <AvatarGroup
-          max={5}
-          sx={{
-            gap: '10px',
-            '& .MuiAvatar-root': {
-              width: 34,
-              height: 34,
-              fontSize: 16,
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              '&:first-of-type': { bgcolor: '#a4b0be' }
-            }
-          }}
-        >
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-          <Tooltip title="Phuc Phuc">
-            <Avatar alt="Phuc Phuc" src="/static/images/avatar/1.jpg" />
-          </Tooltip>
-        </AvatarGroup>
+        <BoardUserGroup />
       </Box>
 
     </Box>
