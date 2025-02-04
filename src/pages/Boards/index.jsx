@@ -61,14 +61,21 @@ function Boards() {
   */
   const page = parseInt(query.get('page') || '1', 10)
 
+  const updateStateData = (res) => {
+    setBoards(res.boards || [])
+    setTotalBoards(res.totalBoards || 0)
+  }
+
   useEffect(() => {
     // Gọi API lấy danh sách boards ở đây...
     fetchBoardsAPI(location.search)
-      .then(res => {
-        setBoards(res.boards || [])
-        setTotalBoards(res.totalBoards || 0)
-      })
+      .then(updateStateData)
   }, [location.search])
+
+  const afterCreateNewBoard = () => {
+    fetchBoardsAPI(location.search)
+      .then(updateStateData)
+  }
 
   // Lúc chưa tồn tại boards > đang chờ gọi api thì hiện loading
   if (!boards) {
@@ -97,7 +104,7 @@ function Boards() {
             </Stack>
             <Divider sx={{ my: 1 }} />
             <Stack direction="column" spacing={1}>
-              <SidebarCreateBoardModal />
+              <SidebarCreateBoardModal afterCreateNewBoard={afterCreateNewBoard} />
             </Stack>
           </Grid>
 
