@@ -88,7 +88,7 @@ function BoardBar({ board }) {
         >
           Invite
         </Button>
-        <BoardUserGroup />
+        <BoardUserGroup boardUsers={board?.FE_allUsers} limit={4} />
       </Box>
 
     </Box>

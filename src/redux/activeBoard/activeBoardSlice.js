@@ -40,6 +40,19 @@ export const activeBoardSlice = createSlice({
 
       // Update data of currentActiveBoard
       state.currentActiveBoard = board
+    },
+    updateCardInBoard: (state, action) => {
+      const incomingCard = action.payload
+
+      const column = state.currentActiveBoard.columns.find(i => i._id === incomingCard.columnId)
+      if (column) {
+        const card = column.cards.find(i => i._id === incomingCard._id)
+        if (card) {
+          Object.keys(incomingCard).forEach(key => {
+            card[key] = incomingCard[key]
+          })
+        }
+      }
     }
   },
   // ExtraReducers: Handle asynchornous logic
@@ -47,6 +60,9 @@ export const activeBoardSlice = createSlice({
     builder.addCase(fetchBoardDetailsAPI.fulfilled, (state, action) => {
       // action.payload is the response.data that we return from API function
       const board = action.payload
+
+      // Board members will be combined by members and owners array
+      board.FE_allUsers = board.owners.concat(board.members)
 
       // Process data if necessary
       board.columns = mapOrder(board.columns, board.columnOrderIds, '_id')
@@ -70,7 +86,7 @@ export const activeBoardSlice = createSlice({
 // Actions: Place for components call inside dispatch()
 // to update state using reducer (synchronous).
 // These actions are automatically created by Redux by using reducers names
-export const { updateCurrentActiveBoard } = activeBoardSlice.actions
+export const { updateCurrentActiveBoard, updateCardInBoard } = activeBoardSlice.actions
 
 // Selectors: Place for components call using useSelector()
 // to get data from Redux Store
