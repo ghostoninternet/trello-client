@@ -40,6 +40,7 @@ import {
 import { updateCardDetailAPI } from '~/apis'
 
 import { styled } from '@mui/material/styles'
+import { updateCardInBoard } from '~/redux/activeBoard/activeBoardSlice'
 const SidebarItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -75,15 +76,35 @@ function ActiveCard() {
   const callApiUpdateCard = async (updateData) => {
     const updatedCard = await updateCardDetailAPI(activeCard._id, updateData)
     dispatch(updateCurrentActiveCard(updatedCard))
+    dispatch(updateCardInBoard(updatedCard))
     return updatedCard
   }
 
   const onUpdateCardTitle = (newTitle) => {
-    callApiUpdateCard({ title: newTitle.trim() })
+    toast.promise(
+      callApiUpdateCard({ title: newTitle.trim() }),
+      { pending: 'Updating...' }
+    ).then(res => {
+      // Check if no error then do further processing
+      if (!res.error) {
+        toast.success('Card updated successfully!')
+      }
+    })
+  }
+
+  const onUpdateCardDescription = (newDescription) => {
+    toast.promise(
+      callApiUpdateCard({ description: newDescription }),
+      { pending: 'Updating...' }
+    ).then(res => {
+      // Check if no error then do further processing
+      if (!res.error) {
+        toast.success('Card updated successfully!')
+      }
+    })
   }
 
   const onUploadCardCover = (event) => {
-    console.log(event.target?.files[0])
     const error = singleFileValidator(event.target?.files[0])
     if (error) {
       toast.error(error)
@@ -92,7 +113,15 @@ function ActiveCard() {
     let reqData = new FormData()
     reqData.append('cardCover', event.target?.files[0])
 
-    // Gọi API...
+    toast.promise(
+      callApiUpdateCard(reqData).finally(() => event.target.value = ''),
+      { pending: 'Updating...' }
+    ).then(res => {
+      // Check if no error then do further processing
+      if (!res.error) {
+        toast.success('Card updated successfully!')
+      }
+    })
   }
 
   return (
@@ -160,7 +189,10 @@ function ActiveCard() {
               </Box>
 
               {/* Feature 03: Xử lý mô tả của Card */}
-              <CardDescriptionMdEditor />
+              <CardDescriptionMdEditor
+                cardDescriptionProp={activeCard?.description}
+                handleUpdateCardDescription={onUpdateCardDescription}
+              />
             </Box>
 
             <Box sx={{ mb: 3 }}>
