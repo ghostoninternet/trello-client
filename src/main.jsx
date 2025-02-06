@@ -23,10 +23,14 @@ let persistor = persistStore(store)
 // Inject store technique
 injectStore(store)
 
+import { io } from 'socket.io-client'
+import { API_ROOT } from '~/utils/constants.js'
+export const socketIoInstance = io(API_ROOT)
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter basename='/'>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <BrowserRouter basename='/'>
         <CssVarsProvider theme={theme}>
           <ConfirmProvider defaultOptions={{
             allowClose: false,
@@ -46,7 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <ToastContainer theme='colored' />
           </ConfirmProvider>
         </CssVarsProvider>
-      </PersistGate>
-    </Provider>
-  </BrowserRouter>
+      </BrowserRouter>
+    </PersistGate>
+  </Provider>
 )
